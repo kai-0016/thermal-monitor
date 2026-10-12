@@ -10,6 +10,9 @@
 
 ## 快速开始
 
+默认安装位置：`%LOCALAPPDATA%\Programs\ThermalMonitor\thermal-monitor.exe`
+（日志在 `%LOCALAPPDATA%\ThermalMonitor\logs`）
+
 1. 双击 `thermal-monitor.exe` —— 程序静默进入系统托盘，**不弹窗**
 2. 托盘上直接显示：**上行 = 当前温度，下行 = CPU 占用**，鼠标悬停看详情
 3. **双击托盘**打开网页看板；**右键**菜单：

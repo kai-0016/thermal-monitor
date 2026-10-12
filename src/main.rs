@@ -254,7 +254,9 @@ fn set_autostart(on: bool) -> bool {
             return false;
         }
         let ok = if on {
-            let mut v: Vec<u16> = exe_path().encode_utf16().chain(std::iter::once(0)).collect();
+            // 路径加引号，避免含空格时启动失败
+            let cmd = format!("\"{}\"", exe_path());
+            let mut v: Vec<u16> = cmd.encode_utf16().chain(std::iter::once(0)).collect();
             RegSetValueExW(
                 key,
                 collect::nt("ThermalMonitor").as_ptr(),
@@ -666,16 +668,8 @@ fn main() {
         }
     }
 
-    // 单实例保护
-    unsafe {
-        CreateMutexW(ptr::null(), FALSE, collect::nt("Global\\ThermalMonitorSingleton").as_ptr());
-        if GetLastError() == 0xB7 {
-            eprintln!("另一实例已在运行，托盘中查看即可。");
-            return;
-        }
-    }
-
-    // 命令行管理开机自启，便于脚本化部署
+    // 命令行管理开机自启，便于脚本化部署。
+    // 必须放在单实例检查之前，否则程序正在运行时设置自启会被静默跳过。
     if args.iter().any(|a| a == "--autostart") {
         let ok = set_autostart(true);
         println!("开机自启：{}", if ok { "已启用" } else { "设置失败" });
@@ -685,6 +679,15 @@ fn main() {
         let ok = set_autostart(false);
         println!("开机自启：{}", if ok { "已取消" } else { "取消失败" });
         return;
+    }
+
+    // 单实例保护
+    unsafe {
+        CreateMutexW(ptr::null(), FALSE, collect::nt("Global\\ThermalMonitorSingleton").as_ptr());
+        if GetLastError() == 0xB7 {
+            eprintln!("另一实例已在运行，托盘中查看即可。");
+            return;
+        }
     }
 
     let collector = match Collector::new() {
